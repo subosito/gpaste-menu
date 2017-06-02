@@ -1,0 +1,29 @@
+#!/bin/bash
+
+shopt -s nullglob
+
+: "${CM_LAUNCHER=dmenu}"
+
+if [[ "$CM_LAUNCHER" == rofi ]]; then
+    set -- -dmenu "$@"
+fi
+
+if [[ $1 == --help ]]; then
+    cat << EOF
+gpaste-menu is a simple clipboard manager using dmenu and gpaste-client.
+All arguments are passed through to dmenu itself.
+
+Environment variables:
+- \$CM_LAUNCHER: specify a dmenu-compatible launcher (default: dmenu)
+EOF
+    exit 0
+fi
+
+chosen_line=$(gpaste-client --oneline | awk 'NF > 0' | "$CM_LAUNCHER" -l 8 "$@")
+
+[[ $chosen_line ]] || exit 1
+
+chosen_number=$(echo "$chosen_line" | awk '{gsub(/:/, ""); print $1}')
+
+gpaste-client select $chosen_number
+
